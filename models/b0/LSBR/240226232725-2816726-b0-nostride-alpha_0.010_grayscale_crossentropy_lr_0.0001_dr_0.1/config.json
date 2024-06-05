@@ -1,0 +1,69 @@
+{
+    "SLURM_JOB_ID": "2816726",
+    "alpha": "0.010",
+    "alphas": [
+        0.01
+    ],
+    "batch_size": 16,
+    "channel": [
+        0
+    ],
+    "dataset": "/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18",
+    "debug": false,
+    "demosaic": null,
+    "demosaic_oracle": false,
+    "drop_rate": 0.1,
+    "experiment_dir_suffix": null,
+    "filters_cover": {
+        "height": 512,
+        "quality": null,
+        "width": 512
+    },
+    "filters_cover_oneof": {
+        "demosaic": null
+    },
+    "filters_stego": {
+        "alpha": null,
+        "stego_method": null
+    },
+    "filters_stego_oneof": {
+        "alpha": [
+            0.01
+        ],
+        "stego_method": [
+            "LSBr"
+        ]
+    },
+    "grayscale": true,
+    "learning_rate": 0.0001,
+    "loss": "crossentropy",
+    "lsbr_reference": true,
+    "network": "b0",
+    "no_stem_stride": true,
+    "num_epochs": 300,
+    "num_workers": 8,
+    "output_dir": "/gpfs/data/fs71999/uncover_mb/experiments/ws/",
+    "pair_constraint": false,
+    "patience": 8,
+    "post_flip": false,
+    "post_rotate": false,
+    "pre_flip": false,
+    "pre_rotate": false,
+    "pretrained": false,
+    "print_freq": 100,
+    "quality": null,
+    "resume": "240226205123-2816619-b0-nostride-alpha_0.050_grayscale_crossentropy_lr_0.0001_dr_0.1",
+    "resume_dir": null,
+    "rotation": null,
+    "seed": null,
+    "shape": [
+        512,
+        512
+    ],
+    "stego_method": "LSBr",
+    "stego_methods": [
+        "LSBr"
+    ],
+    "tr_csv": "split_tr.csv",
+    "va_csv": "split_va.csv"
+}

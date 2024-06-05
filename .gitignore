@@ -1,0 +1,4 @@
+.DS_Store
+models2/
+*.pyc
+__pycache__

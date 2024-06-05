@@ -1,0 +1,65 @@
+{
+    "SLURM_JOB_ID": "2808646",
+    "alpha": "0.400",
+    "alphas": null,
+    "batch_size": 16,
+    "channel": [
+        0
+    ],
+    "covers_only": false,
+    "dataset": "/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18",
+    "debug": false,
+    "demosaic": null,
+    "demosaic_oracle": false,
+    "drop_rate": 0.0,
+    "experiment_dir_suffix": null,
+    "filters_cover": {
+        "height": 512,
+        "quality": null,
+        "width": 512
+    },
+    "filters_cover_oneof": {
+        "demosaic": null
+    },
+    "filters_stego": {
+        "alpha": null,
+        "stego_method": null
+    },
+    "filters_stego_oneof": {
+        "alpha": [
+            0.4
+        ],
+        "stego_method": [
+            "HILLr"
+        ]
+    },
+    "grayscale": true,
+    "learning_rate": 0.0001,
+    "loss": "l1ws",
+    "loss_lambda": 0.25,
+    "network": "unet_2",
+    "num_epochs": 300,
+    "num_workers": 8,
+    "output_dir": "/gpfs/data/fs71999/uncover_mb/experiments/ws/",
+    "pair_constraint": false,
+    "parity_oracle": false,
+    "patience": 10,
+    "post_flip": false,
+    "post_rotate": false,
+    "pre_flip": false,
+    "pre_rotate": false,
+    "print_freq": 50,
+    "quality": null,
+    "resume": null,
+    "resume_dir": null,
+    "rotation": null,
+    "seed": null,
+    "shape": [
+        512,
+        512
+    ],
+    "stego_method": "HILLr",
+    "stego_methods": null,
+    "tr_csv": "split_tr.csv",
+    "va_csv": "split_va.csv"
+}
