@@ -30,7 +30,7 @@
             0.4
         ],
         "stego_method": [
-            "HILLr"
+            "HILLR"
         ]
     },
     "grayscale": true,
@@ -58,7 +58,7 @@
         512,
         512
     ],
-    "stego_method": "HILLr",
+    "stego_method": "HILLR",
     "stego_methods": null,
     "tr_csv": "split_tr.csv",
     "va_csv": "split_va.csv"

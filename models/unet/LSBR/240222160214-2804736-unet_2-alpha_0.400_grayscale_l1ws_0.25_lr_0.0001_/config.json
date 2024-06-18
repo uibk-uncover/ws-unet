@@ -29,7 +29,7 @@
             0.4
         ],
         "stego_method": [
-            "LSBr"
+            "LSBR"
         ]
     },
     "grayscale": true,
@@ -57,7 +57,7 @@
         512,
         512
     ],
-    "stego_method": "LSBr",
+    "stego_method": "LSBR",
     "stego_methods": null,
     "tr_csv": "split_tr.csv",
     "va_csv": "split_va.csv"

@@ -206,7 +206,6 @@ def get_unet_saliency(
     # return d
 
 
-
 if __name__ == '__main__':
     BOSS_PATH = Path('/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18/images/')
     fname = BOSS_PATH / '6.png'

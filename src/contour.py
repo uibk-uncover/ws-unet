@@ -39,7 +39,7 @@ def plot_contour(
 def get_unet_difference(
     fname: Path,
     *,
-    model_path: Path = Path('../models/unet/LSBr'),
+    model_path: Path = Path('../models/unet/LSBR'),
     channels: typing.Tuple[int] = (3,),
     device: torch.nn.Module = torch.device('cpu'),
     imread: typing.Callable = _defs.imread_u8,
@@ -48,11 +48,11 @@ def get_unet_difference(
     # load model
     device = torch.device('cpu')
     model_name = unet.get_model_name(
-        network='unet_2',
-        stego_method='LSBr',
-        alpha=.4,
-        drop_rate=.0,
-        loss='l1ws',
+        # network='unet_2',
+        stego_method='LSBR',
+        # alpha=.4,
+        # drop_rate=.0,
+        # loss='l1ws',
     )
     model = unet.get_pretrained(
         model_path=model_path,
@@ -87,7 +87,7 @@ def get_filter_difference(
     # load model
     model = filters.get_coefficients(
         # channels=channels,
-        model_name=model_name,
+        filter_name=model_name,
         flatten=False,
     )
 

@@ -42,16 +42,16 @@ def get_pretrained(
 
 
 def get_model_name(
-    network: str = 'unet_2',
+    # network: str = 'unet_2',
     stego_method: str = 'LSBr',
-    alpha: float = .4,
-    loss: str = 'l1ws',
-    drop_rate: float = .0,
-    model_path: str = '../models/unet',
+    # alpha: float = .4,
+    # loss: str = 'l1ws',
+    # drop_rate: float = .0,
+    # model_path: str = '../models/unet',
     device: torch.device = torch.device('cpu')
 ) -> pd.DataFrame:
     # list models
-    model_path = Path(model_path) / stego_method
+    model_path = Path('../models/unet') / stego_method
     models = glob.glob(str(model_path / '*' / 'config.json'))
 
     # collect info
@@ -90,22 +90,20 @@ def get_model_name(
     df = pd.DataFrame(df)
 
     # filter models
-    df = df[df.network == network]
+    # df = df[df.network == network]
     df = df[df.stego_method == stego_method]
-    df = df[df.loss == loss]
-    if alpha is not None:
-        df = df[df.alpha == alpha]
-    else:
-        df = df[df.alpha.isna()]
-    df = df[df.drop_rate == drop_rate]
+    # df = df[df.loss == loss]
+    # if alpha is not None:
+    #     df = df[df.alpha == alpha]
+    # else:
+    #     df = df[df.alpha.isna()]
+    # df = df[df.drop_rate == drop_rate]
 
     #
     if len(df) < 1:
-        print(network, stego_method, loss, alpha, drop_rate)
-        raise RuntimeError('no such model found')
+        raise RuntimeError(f'no model for {stego_method=} found')
     if len(df) > 1:
-        print(df)
-        raise RuntimeError('multiple such models found')
+        raise RuntimeError(f'multiple models for {stego_method=} found')
     return df['model_name'].iloc[0]
 
 

@@ -1,9 +1,9 @@
 
 #
 # from . import train
-from . import evaluate
+# from . import evaluate
 #
 # from . import ols
-from . import predict
+from . import evaluate
 #
-from .predict import get_filter_estimator, get_coefficients, infere_single, get_filter_estimates
+from .evaluate import get_filter_estimator, get_coefficients, infere_single, get_filter_estimates

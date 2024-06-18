@@ -91,11 +91,10 @@ class WSLoss(CustomLoss):
 
 
 class L1WSLoss(torch.nn.Module):
-    def __init__(self, lmbda):
+    def __init__(self):
         super(L1WSLoss, self).__init__()
         self.l1_loss = L1Loss()
         self.ws_loss = WSLoss()
-        self.lmbda = lmbda
 
     def forward(self, outputs, targets, inputs):
         # get losses
