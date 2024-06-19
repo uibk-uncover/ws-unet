@@ -141,7 +141,7 @@ def infere_single(x, model):
 
 
 def get_filter_estimator(*args, **kw) -> np.ndarray:
-    kernel = get_coefficients(*args, flatten=True, **kw)
+    kernel = get_coefficients(*args, **kw)
     return lambda x: infere_single(x, kernel)
 
 

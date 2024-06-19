@@ -1,10 +1,13 @@
+"""
 
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from PIL import Image
-import scipy.signal
 import sys
 import torch
 import typing

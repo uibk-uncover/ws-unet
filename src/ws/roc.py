@@ -1,3 +1,8 @@
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np

@@ -1,3 +1,8 @@
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import numpy as np
 import pandas as pd

@@ -1,3 +1,8 @@
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import argparse
 import collections
@@ -284,10 +289,21 @@ def get_model_name(
     return df['model_name'].iloc[0]
 
 
+def get_model_config(
+    model_dir: pathlib.Path,
+    stego_method: str,
+    model_name: str,
+) -> typing.Dict[str, typing.Any]:
+    model_path = pathlib.Path(model_dir) / stego_method / model_name
+    with open(model_path / 'config.json') as f:
+        config = json.load(f)
+    return config
+
+
 if __name__ == '__main__':
     #
     model_dir = pathlib.Path('../models/unet')
-    stego_method = 'HILLR'  # dropout LSBR HILLR
+    stego_method = 'dropout'  # dropout LSBR HILLR
     model_name = get_model_name(
         model_dir=model_dir,
         stego_method=stego_method,
@@ -295,11 +311,13 @@ if __name__ == '__main__':
     )
 
     #
-    model_path = model_dir / stego_method / model_name
-    with open(model_path / 'config.json') as f:
-        config = json.load(f)
+    config = get_model_config(
+        model_dir=model_dir,
+        stego_method=stego_method,
+        model_name=model_name,
+    )
+    config['model_path'] = model_dir / stego_method / model_name
     config['output_dir'] = pathlib.Path('../results/prediction/')
-    config['model_path'] = model_path
     config['dataset'] = pathlib.Path('../data/')
     config['batch_size'] = 1
     config['print_freq'] = 1
