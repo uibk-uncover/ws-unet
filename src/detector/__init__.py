@@ -7,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 import torch
 
-from .model import load_model
+from .models import load_b0
 from .evaluate import infere_single
 
 
@@ -18,7 +18,7 @@ def get_b0_detector(
 ):
     # load model
     device = torch.device('cpu')
-    model = load_model(*args, **kw, device=device)
+    model = load_b0(*args, **kw, device=device)
     model.eval()
 
     def predict(x):
@@ -29,12 +29,12 @@ def get_b0_detector(
 
 
 def get_model_name(
-    network: str = 'b0',
-    stego_method: str = 'LSBr',
+    # network: str = 'b0',
+    stego_method: str = 'LSBR',
     alpha: float = .4,
     no_stem_stride: bool = False,
     lsbr_reference: bool = False,
-    model_path: str = '/gpfs/data/fs71999/uncover_mb/experiments/ws',
+    model_path: str = '../models/b0',
     device: torch.device = torch.device('cpu'),
 ) -> pd.DataFrame:
     # list models
@@ -79,15 +79,17 @@ def get_model_name(
     df = pd.DataFrame(df)
 
     # filter models
-    df = df[df.network == network]
+    # df = df[df.network == network]
     df = df[df.stego_method == stego_method]
+    print(f'{alpha=}', df)
     df = df[df.alpha == alpha]
+    print(f'{no_stem_stride=}', df)
     df = df[df.no_stem_stride == no_stem_stride]
+    print(f'{lsbr_reference=}', df)
     df = df[df.lsbr_reference == lsbr_reference]
-    # print(df)
-    # print(df.to_string())
 
     #
+    print(df)
     if len(df) < 1:
         raise RuntimeError('no such model found')
     if len(df) > 1:

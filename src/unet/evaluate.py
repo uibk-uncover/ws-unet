@@ -20,16 +20,17 @@ import torchvision.transforms as transforms
 import typing
 
 sys.path.append('.')
+import _defs
 sys.path.append('unet')
 from data import get_data_loader, get_timm_transform
 from model import get_model
-sys.path.append('..')
-from _defs import seed_everything, setup_custom_logger
-from _defs import metrics, losses
+# sys.path.append('..')
+# from _defs import seed_everything, setup_custom_logger
+# from _defs import metrics, losses
 
 #
 DEVICE = torch.device('cpu')
-log = setup_custom_logger(pathlib.Path(__file__).name)
+log = _defs.setup_custom_logger(pathlib.Path(__file__).name)
 
 
 def evaluate_model(
@@ -109,12 +110,12 @@ def infere_single(
 def evaluate_for_dataset(loader, model, criterion, device, suffix):
 
     # Create meters
-    loss_meter = metrics.AverageMeter('Loss', ':.4e')
+    loss_meter = _defs.metrics.AverageMeter('Loss', ':.4e')
     mask_meters = [
-        metrics.MAEMeter('MAE', ':.4e')
+        _defs.metrics.MAEMeter('MAE', ':.4e')
     ]
     target_meters = [
-        metrics.WSMeter('WS', ':.4e'),
+        _defs.metrics.WSMeter('WS', ':.4e'),
     ]
 
     # Evaluate model
@@ -165,7 +166,7 @@ def evaluate(
     # Seed if requested
     if config['seed']:
         log.warn('You have chosen to seed training. This will turn on the CUDNN deterministic setting, which can slow down your training considerably! You may see unexpected behavior when restarting from checkpoints.')
-        seed_everything(config['seed'])
+        _defs.seed_everything(config['seed'])
 
     # Data loaders
     config['pre_rotate'] = config['post_rotate'] = config['post_flip'] = config['pre_flip'] = False
@@ -193,9 +194,9 @@ def evaluate(
 
     # Set up loss and optimizer
     if config['loss'] == 'l1':
-        criterion = losses.L1Loss().to(device)
+        criterion = _defs.losses.L1Loss().to(device)
     elif config['loss'] == 'l1ws':
-        criterion = losses.L1WSLoss().to(device)
+        criterion = _defs.losses.L1WSLoss().to(device)
     else:
         raise NotImplementedError(f'loss {config["loss"]} not implemented')
 
@@ -237,7 +238,7 @@ def evaluate(
 
 
 def get_model_name(
-    stego_method: str = 'LSBr',
+    stego_method: str = 'LSBR',
     model_dir: pathlib.Path = pathlib.Path('../models/unet'),
     device: torch.device = torch.device('cpu')
 ) -> pd.DataFrame:

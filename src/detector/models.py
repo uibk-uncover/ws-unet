@@ -1,14 +1,18 @@
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import logging
 import pathlib
 import timm
 import torch
 from typing import Tuple
-# from .SRNet import SRNet
 
 
 def get_b0(
-    name: str,
+    # name: str,
     # weights: str,
     in_channels: int,
     shape: Tuple[int],
@@ -27,7 +31,7 @@ def get_b0(
         pretrained=pretrained,
         **kw,
     )
-    model.model_name = name
+    model.model_name = 'b0'
     fc_name = 'classifier'
     conv_stem_names = ['conv_stem']
 

@@ -1,3 +1,8 @@
+"""
+
+Author: Martin Benes
+Affiliation: University of Innsbruck
+"""
 
 import argparse
 import json
@@ -11,23 +16,13 @@ from torchinfo import summary
 import torchvision.transforms as transforms
 import typing
 
-try:
-    from .data import get_data_loader, get_timm_transform
-    from .models import get_b0
-    from .. import _defs
-    from .._defs import seed_everything, setup_custom_logger
-    from .._defs import metrics
-except ImportError:
-    sys.path.append('.')
-    sys.path.append('detector')
-    from data import get_data_loader
-    from models import get_b0
-    sys.path.append('..')
-    import _defs
-    from _defs import seed_everything, setup_custom_logger
-    from _defs import metrics
+sys.path.append('.')
+import _defs
+sys.path.append('detector')
+from data import get_data_loader, get_timm_transform
+from models import get_b0
 
-log = setup_custom_logger(pathlib.Path(__file__).name)
+log = _defs.setup_custom_logger(pathlib.Path(__file__).name)
 
 ARGS_COLS = [
     'model',
@@ -127,22 +122,22 @@ def infere_single(
 def evaluate_for_dataset(loader, model, criterion, device, suffix=''):
 
     # Create meters
-    loss_meter = metrics.LossMeter()
+    loss_meter = _defs.metrics.LossMeter()
     target_meters = [
-        metrics.AccuracyMeter(),
-        metrics.MisclassificationMeter(),
-        metrics.PrecisionMeter(),
-        metrics.RecallMeter(),
+        _defs.metrics.AccuracyMeter(),
+        _defs.metrics.MisclassificationMeter(),
+        _defs.metrics.PrecisionMeter(),
+        _defs.metrics.RecallMeter(),
     ]
     score_meters = [
-        metrics.PEMeter(),
-        metrics.PMD5FPMeter(),
+        _defs.metrics.PEMeter(),
+        _defs.metrics.PMD5FPMeter(),
         # metrics.RocAucMeter('wAUC', ':4.3f'),
-        metrics.wAUCMeter(),
+        _defs.metrics.wAUCMeter(),
     ]
 
     # Create writer
-    pred_writer = metrics.PredictionWriter()
+    pred_writer = _defs.metrics.PredictionWriter()
 
     print(f'evaluate_for_dataset with suffix {suffix}')
 
@@ -189,7 +184,7 @@ def evaluate(args):
     # Seed if requested
     if args['seed']:
         log.warn('You have chosen to seed training. This will turn on the CUDNN deterministic setting, which can slow down your training considerably! You may see unexpected behavior when restarting from checkpoints.')
-        seed_everything(args['seed'])
+        _defs.seed_everything(args['seed'])
 
     # Data loaders
     args['pre_rotate'] = args['post_rotate'] = args['post_flip'] = args['pre_flip'] = False

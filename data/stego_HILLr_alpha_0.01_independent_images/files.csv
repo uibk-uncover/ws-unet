@@ -1,0 +1,6 @@
+name,height,width,stego_method,alpha
+stego_HILLR_alpha_0.01_independent_images/6.png,512,512,HILLR,0.01
+stego_HILLR_alpha_0.01_independent_images/7.png,512,512,HILLR,0.01
+stego_HILLR_alpha_0.01_independent_images/8.png,512,512,HILLR,0.01
+stego_HILLR_alpha_0.01_independent_images/9.png,512,512,HILLR,0.01
+stego_HILLR_alpha_0.01_independent_images/10.png,512,512,HILLR,0.01
