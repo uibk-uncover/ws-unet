@@ -72,7 +72,6 @@ def predict_unet(
 
     # predict
     y = infere_single(x, lsbr_reference=lsbr_reference, model=model, device=device)
-    # print(kw['name'], y, y > .5)
 
     return {
         **kw,
@@ -151,11 +150,11 @@ def get_model_name(
     # filter models
     # df = df[df.network == network]
     df = df[df.stego_method == stego_method]
-    # print(f'{alpha=}', df)
+    print(f'{alpha=}', df)
     df = df[df.alpha == alpha]
-    # print(f'{no_stem_stride=}', df)
+    print(f'{no_stem_stride=}', df)
     df = df[df.no_stem_stride == no_stem_stride]
-    # print(f'{lsbr_reference=}', df)
+    print(f'{lsbr_reference=}', df)
     df = df[df.lsbr_reference == lsbr_reference]
 
     #

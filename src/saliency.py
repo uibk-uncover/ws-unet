@@ -13,7 +13,7 @@ import torch
 import typing
 sys.path.append('.')
 import _defs
-import diffusion
+import unet
 import filters
 
 
@@ -49,9 +49,9 @@ def get_locations(
 ):
     # load image
     x = imread(fname)
-    Image.fromarray(x[..., 0].astype('uint8')).save('../text/img/saliency_image.png')
+    # Image.fromarray(x[..., 0].astype('uint8')).save('../text/img/saliency_image.png')
 
-    gh = filters.predict.infere_single(
+    gh = filters.infere_single(
         x,
         np.array([
             [+1, +2, +1],
@@ -59,7 +59,7 @@ def get_locations(
             [-1, -2, -1],
         ], dtype='float32')[..., None]
     )
-    gv = filters.predict.infere_single(
+    gv = filters.infere_single(
         x,
         np.array([
             [+1, 0, -1],
@@ -67,7 +67,7 @@ def get_locations(
             [+1, 0, -1],
         ], dtype='float32')[..., None]
     )
-    g = filters.predict.infere_single(
+    g = filters.infere_single(
         np.sqrt(gh**2 + gv**2),
         np.array([
             [+1, +1, +1],
@@ -92,7 +92,7 @@ def get_locations(
     y[gv_max[:2]] = [255, 0, 0]
     y[g_max[:2]] = [255, 0, 0]
     y[g_min[:2]] = [255, 0, 0]
-    Image.fromarray(y).save('../text/img/saliency_image_dots.png')
+    Image.fromarray(y).save('../results/prediction/saliency_image_dots.png')
     # fig, ax = plt.subplots()
     # ax.imshow(y)
     # fig.savefig('changes.png', dpi=600, bbox_inches='tight')
@@ -102,39 +102,40 @@ def get_unet_saliency(
     fname: Path,
     i: int, j: int,
     *,
-    loss: str = 'l1',
-    stego_method: str = 'LSBr',
-    channels: typing.Tuple[int] = (3,),
+    # loss: str = 'l1',
+    stego_method: str = 'LSBR',
+    # channels: typing.Tuple[int] = (3,),
     device: torch.nn.Module = torch.device('cpu'),
     imread: typing.Callable = _defs.imread_u8,
     **kw,
 ):
     # load model
     device = torch.device('cpu')
-    if loss == 'l1ws':
-        model_name = diffusion.get_model_name(
-            network='unet_2',
-            stego_method=stego_method,
-            alpha=.4,
-            drop_rate=.0,
-            loss='l1ws',
-        )
-        model_path = Path('/gpfs/data/fs71999/uncover_mb/experiments/ws/') / stego_method
-    else:
-        stego_method = None
-        model_name = diffusion.get_model_name(
-            stego_method='dropout',
-            alpha=None,
-            drop_rate=.1,
-            loss='l1',
-        )
-        model_path = Path('/gpfs/data/fs71999/uncover_mb/experiments/ws/dropout')
-    model = diffusion.get_pretrained(
+    model_path = Path('../models/unet') / stego_method
+    # if stego_method in {'LSBR', 'HILLR'}:
+    model_name = unet.get_model_name(
+        # network='unet_2',
+        stego_method=stego_method,
+        # model_dir=model_dir
+        # alpha=.4,
+        # drop_rate=.0,
+        # loss='l1ws',
+    )
+        
+    # else:
+    #     stego_method = None
+    #     model_name = unet.get_model_name(
+    #         stego_method='dropout',
+    #         # alpha=None,
+    #         # drop_rate=.1,
+    #         # loss='l1',
+    #     )
+    model = unet.get_pretrained(
         model_path=model_path,
-        channels=channels,
+        channels=(3,),
         device=device,
         model_name=model_name,
-        **kw,
+        # **kw,
     )
     model.input_dropout = None
 
@@ -147,7 +148,7 @@ def get_unet_saliency(
     model.eval()
 
     # transform input
-    transform = diffusion.data.get_timm_transform(
+    transform = unet.data.get_timm_transform(
         mean=None,
         std=None,
         grayscale=True,
@@ -176,30 +177,19 @@ def get_unet_saliency(
     n = 8
 
     stego_method = f'_{stego_method}' if stego_method else ''
-    with open(f'../text/img/saliency_{loss}{stego_method}_{i}-{j}.csv', 'w') as fp:
-        for dx in range(-n, n+1):
-            for dy in range(-n, n+1):
-                v = slc[0, 0, i+dx, j+dy].detach().numpy()
-                fp.write(f'{dx}\t{dy}\t{v}\n')
+    # with open(f'../saliency_{stego_method}_{i}-{j}.csv', 'w') as fp:
+    #     for dx in range(-n, n+1):
+    #         for dy in range(-n, n+1):
+    #             v = slc[0, 0, i+dx, j+dy].detach().numpy()
+    #             fp.write(f'{dx}\t{dy}\t{v}\n')
 
-    # slcN = slc[0, 0, i-n:i+n+1, j-n:j+n+1].detach().numpy()
+    slcN = slc[0, 0, i-n:i+n+1, j-n:j+n+1].detach().numpy()
+    return slcN
     # print(slcN)
-    return
+    # return
 
 
 
-    fig, ax = plt.subplots(1, 1)
-    if loss == 'l1':
-        vmin, vmax = -1, 1
-    else:
-        vmin, vmax = -.5, .5
-    im = ax.imshow(slcN, vmin=vmin, vmax=vmax, cmap='coolwarm')
-    fig.subplots_adjust(right=0.85)
-    cbar_ax = fig.add_axes([0.88, 0.15, 0.04, 0.7])
-    fig.colorbar(im, cax=cbar_ax)
-    # ax.xticks([])
-    # ax.yticks([])
-    fig.savefig(f'saliency_{loss}_{i}-{j}.png', dpi=600, bbox_inches='tight')
 
     # # difference image
     # x = x[1:-1, 1:-1]
@@ -210,34 +200,45 @@ def get_unet_saliency(
 
 
 if __name__ == '__main__':
-    BOSS_PATH = Path('/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18/images/')
-    fname = BOSS_PATH / '6.png'
+    COVER_PATH = Path('../data/images')
+    fname = COVER_PATH / '6.png'
     imread = _defs.imread_f32
-    get_locations(
-        fname,
-        imread=imread,
-    )
+    stego_method = 'dropout'  # dropout LSBR
+    # BOSS_PATH = Path('/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18/images/')
+    # DATA_PATH = Path('/gpfs/data/fs71999/uncover_mb/data/boss/fabrika-2024-01-18/images/')
+    # fname = BOSS_PATH / '6.png'
+    # imread = _defs.imread_f32
+    # get_locations(
+    #     fname,
+    #     imread=imread,
+    # )
 
-    for i, j in [
+
+    vmin, vmax = (-1, 1) if stego_method == 'dropout' else (-.5, .5)
+
+    fig, ax = plt.subplots(2, 2)
+    for idx, (i, j) in enumerate([
         (307, 10),  # gh_max
         (261, 64),  # gv_max
         (155, 381),  # g_max
         (9, 25),  # g_min
-        # # others
-        # (100, 100),
-        # (200, 200),
-        # (300, 300),
-        # (400, 400),
-    ]:
+    ]):
         #
         sal_unet = get_unet_saliency(
             fname,
             i=i,
             j=j,
             imread=imread,
-            loss='l1',
-            stego_method='HILLr'
+            # loss='l1',
+            stego_method=stego_method
         )
+        im = ax[idx // 2, idx % 2].imshow(sal_unet, vmin=vmin, vmax=vmax, cmap='coolwarm')
+
+    fig.subplots_adjust(right=0.85)
+    cbar_ax = fig.add_axes([0.88, 0.15, 0.04, 0.7])
+    fig.colorbar(im, cax=cbar_ax)
+    fig.savefig(f'../results/prediction/saliency_{stego_method}.png', dpi=600, bbox_inches='tight')
+
     # d_kb = get_filter_difference(
     #     fname,
     #     imread=imread,

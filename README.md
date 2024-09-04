@@ -19,13 +19,13 @@ python contour.py
 # WS error
 python ws/evaluate.py
 
-# detection error - TODO
-python ws/roc.py
+# detection error
 python detector/evaluate.py
+python ws/roc.py
 
-# correlation - TODO
+# correlation
 python correlation.py
 
-# saliency maps - TODO
+# saliency maps
 python saliency.py
 ```

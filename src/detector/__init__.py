@@ -8,6 +8,6 @@ from pathlib import Path
 import torch
 
 from .models import load_b0
-from .evaluate import infere_single
+from .evaluate import infere_single, get_model_name, get_b0_detector
 
 

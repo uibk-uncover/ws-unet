@@ -15,15 +15,15 @@ import typing
 sys.path.append('..')
 import _defs
 
-try:
-    from . import StegoDataset
-except ImportError:
-    sys.path.append('.')
-    sys.path.append('detector')
-    sys.path.append('detector/data')
-    import StegoDataset
-    sys.path.append('..')
-    import _defs
+# try:
+#     from . import StegoDataset
+# except ImportError:
+#     # sys.path.append('.')
+#     # sys.path.append('detector')
+#     # sys.path.append('detector/data')
+#     # import StegoDataset
+# sys.path.append('..')
+# import _defs
 
 # sys.path.append('..')
 # from _defs import RandomRotation90, ColorChannel, Grayscale, DemosaicOracle
@@ -65,77 +65,77 @@ def get_timm_transform(
     return transforms.Compose(transform)
 
 
-def get_data_loader(
-    config_path: pathlib.Path,
-    args: typing.Dict[str, typing.Any],
-    augment: bool = False,
-    debug: bool = False,
-):
-    """"""
-    # Normalization
-    mean = list(timm.data.constants.IMAGENET_DEFAULT_MEAN)
-    std = list(timm.data.constants.IMAGENET_DEFAULT_STD)
-    if args['grayscale']:  # take green
-        mean = mean[1:2]
-        std = std[1:2]
+# def get_data_loader(
+#     config_path: pathlib.Path,
+#     args: typing.Dict[str, typing.Any],
+#     augment: bool = False,
+#     debug: bool = False,
+# ):
+#     """"""
+#     # Normalization
+#     mean = list(timm.data.constants.IMAGENET_DEFAULT_MEAN)
+#     std = list(timm.data.constants.IMAGENET_DEFAULT_STD)
+#     if args['grayscale']:  # take green
+#         mean = mean[1:2]
+#         std = std[1:2]
 
-    # Reader
-    if args['quality'] is None:
-        imread = _defs.imread4_u8
-    else:
-        raise NotImplementedError
-    #     imread = imread_pillow
-    # elif not args['grayscale']:
-    #     imread = imread_jpeglib_YCbCr
-    # else:
-    #     imread = imread_jpeglib
+#     # Reader
+#     if args['quality'] is None:
+#         imread = _defs.imread4_u8
+#     else:
+#         raise NotImplementedError
+#     #     imread = imread_pillow
+#     # elif not args['grayscale']:
+#     #     imread = imread_jpeglib_YCbCr
+#     # else:
+#     #     imread = imread_jpeglib
 
-    # Dataset transform
-    transform = get_timm_transform(
-        mean=mean,
-        std=std,
-        grayscale=args.get('grayscale', False),
-        demosaic_oracle=args.get('demosaic_oracle', False),
-        post_flip=args.get('post_flip', False),
-        post_rotate=args.get('post_rotate', False),
-        lsbr_reference=args.get('lsbr_reference', False),
-    )
-    target_transform = None
-    print('Data transform')
-    print(transform)
+#     # Dataset transform
+#     transform = get_timm_transform(
+#         mean=mean,
+#         std=std,
+#         grayscale=args.get('grayscale', False),
+#         demosaic_oracle=args.get('demosaic_oracle', False),
+#         post_flip=args.get('post_flip', False),
+#         post_rotate=args.get('post_rotate', False),
+#         lsbr_reference=args.get('lsbr_reference', False),
+#     )
+#     target_transform = None
+#     print('Data transform')
+#     print(transform)
 
-    # Dataset
-    dataset = StegoDataset(
-        # dataset
-        args['dataset'],
-        config_path,
-        imread=imread,
-        # training parameters
-        filters_cover=args['filters_cover'],
-        filters_cover_oneof=args['filters_cover_oneof'],
-        filters_stego=args['filters_stego'],
-        filters_stego_oneof=args['filters_stego_oneof'],
-        rotation=None if args['pre_rotate'] else 0,  #
-        # pair constraint
-        pair_constraint=args['pair_constraint'],
-        seed=args['seed'],  # for shuffling, if PC=False
-        # other
-        transform=transform,
-        target_transform=target_transform,
-        debug=debug,
-    )
+#     # Dataset
+#     dataset = StegoDataset(
+#         # dataset
+#         args['dataset'],
+#         config_path,
+#         imread=imread,
+#         # training parameters
+#         filters_cover=args['filters_cover'],
+#         filters_cover_oneof=args['filters_cover_oneof'],
+#         filters_stego=args['filters_stego'],
+#         filters_stego_oneof=args['filters_stego_oneof'],
+#         rotation=None if args['pre_rotate'] else 0,  #
+#         # pair constraint
+#         pair_constraint=args['pair_constraint'],
+#         seed=args['seed'],  # for shuffling, if PC=False
+#         # other
+#         transform=transform,
+#         target_transform=target_transform,
+#         debug=debug,
+#     )
 
-    # Create data loaders
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=args["batch_size"],
-        shuffle=False,
-        num_workers=args["num_workers"],
-        pin_memory=True,
-    )
+#     # Create data loaders
+#     loader = torch.utils.data.DataLoader(
+#         dataset,
+#         batch_size=args["batch_size"],
+#         shuffle=False,
+#         num_workers=args["num_workers"],
+#         pin_memory=True,
+#     )
 
-    #
-    return loader, dataset
+#     #
+#     return loader, dataset
 
 
 # for split in ['tr', 'va', 'te']:

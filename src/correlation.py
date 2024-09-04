@@ -4,6 +4,7 @@ Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
+import logging
 import numpy as np
 import pandas as pd
 import pathlib
@@ -18,7 +19,7 @@ import unet
 
 
 
-@fabrika.cover_stego_spatial(iterator='python', convert_to='pandas', ignore_missing=True, n_jobs=50)
+@fabrika.cover_stego_spatial(iterator='python', convert_to='pandas', ignore_missing=True, n_jobs=-1)
 def run(
     fname: pathlib.Path,
     name_c: str,
@@ -57,6 +58,7 @@ def run(
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     #
     DATA_DIR = pathlib.Path('../data')
     MODEL_DIR = pathlib.Path('../models/unet')
@@ -113,4 +115,6 @@ if __name__ == '__main__':
         'correlation': 'median',
         'p-value': 'median'
     })
-    res.T[model_names].to_csv('../results/estimation/correlation.csv')
+    outfile = '../results/estimation/correlation.csv'
+    res.T[model_names].to_csv(outfile)
+    logging.info(f'output saved to {outfile}')

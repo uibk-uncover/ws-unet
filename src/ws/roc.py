@@ -4,6 +4,7 @@ Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 # import os
@@ -24,8 +25,9 @@ import _defs
 import detector
 import fabrika
 import unet
-sys.path.append('ws')
-import estimate
+import ws
+# sys.path.append('ws')
+# import estimate
 
 
 def _attack(
@@ -65,7 +67,7 @@ def run(
     stego_method: str,
     alpha: float,
     model_name: str,
-    model_path: str,
+    model_dir: str,
     no_stem_stride: bool = False,
     lsbr_reference: bool = False,
     imread: typing.Callable = _defs.imread4_f32,  # reads image
@@ -87,7 +89,7 @@ def run(
     in_channels = 1
     in_channels += int(lsbr_reference)
     detect = detector.get_b0_detector(
-        model_path=model_path,
+        model_dir=model_dir,
         model_name=model_name,
         in_channels=in_channels,
         shape=(512, 512),
@@ -125,7 +127,7 @@ def run(
 #     # matched: bool = True,
 #     **kw,
 # ) -> pd.DataFrame:
-#     model_path = pathlib.Path(f'../models/{unet}') / stego_methods[-1]
+#     model_dir = pathlib.Path(f'../models/{unet}') / stego_methods[-1]
 #     res = []
 #     for stego_method in stego_methods:
 #         for alpha in alphas if stego_method else [.0]:
@@ -143,7 +145,7 @@ def run(
 #                     alpha=alpha,
 #                     #
 #                     # model=model,
-#                     model_path=model_path,
+#                     model_dir=model_dir,
 #                     # kernel_path=pathlib.Path('../results/filters_boss/gray'),
 #                     model_name=model_name,
 #                     weighted=0,
@@ -177,7 +179,7 @@ def run(
 #                     alpha=alpha,
 #                     #
 #                     # model=model,
-#                     model_path=model_path,
+#                     model_dir=model_dir,
 #                     model_name=model_name,
 #                     no_stem_stride=no_stem_stride,
 #                     lsbr_reference=lsbr_reference,
@@ -287,7 +289,7 @@ def produce_roc(df_ws: pd.DataFrame) -> pd.DataFrame:
 #     # STEGO_METHODS = [None, 'LSBr']  #, 'HILLr']  # ['LSBr', 'HILLr']
 #     # ALPHAS = [.05, .01]  # [.4, .2, .1, .05, .01]  # .01, .05]  #.1, .2]
 #     # ALPHAS = [.4, .2, .1]  # [.4, .2, .1, .05, .01]  # .01, .05]  #.1, .2]
-#     # MODEL_PATH = pathlib.Path('/gpfs/data/fs71999/uncover_mb/experiments/ws') / STEGO_METHODS[-1]
+#     # MODEL_DIR = pathlib.Path('/gpfs/data/fs71999/uncover_mb/experiments/ws') / STEGO_METHODS[-1]
 #     # MODEL_NAMES = ['KB', 'UNet']  # ['AVG', 'KB', 'OLS', 'UNet']  #['AVG', 'KB', 'OLS']  # , 'UNet']
 #     take_num_images = 1000
 
@@ -368,40 +370,41 @@ if __name__ == '__main__':
 
     #
     res = []
-    # model_path = pathlib.Path('../models/unet') / L1WS_TRAIN_METHOD
-    # for stego_method in STEGO_METHODS:
-    #     for alpha in ALPHAS if stego_method else [None]:
-    #         for model_name in ['AVG', 'KB', 'UNet']:
-    #             print(stego_method, alpha, model_name)
-    #             if model_name == 'UNet':
-    #                 model_name = unet.get_model_name(
-    #                     stego_method=L1WS_TRAIN_METHOD,
-    #                 )
-    #             res_i = estimate.run(
-    #                 input_dir=DATA_PATH,
-    #                 stego_method=stego_method,
-    #                 alpha=alpha,
-    #                 channels=[3],
-    #                 #
-    #                 model_path=model_path,
-    #                 model_name=model_name,
-    #                 weighted=0,
-    #                 correct_bias=False,
-    #                 #
-    #                 progress_on=True,
-    #             )
-    #             res.append(res_i)
+    model_path = pathlib.Path('../models/unet') / L1WS_TRAIN_METHOD
+    for stego_method in STEGO_METHODS:
+        for alpha in ALPHAS if stego_method else [None]:
+            for model_name in ['AVG', 'KB', 'UNet']:
+                print(stego_method, alpha, model_name)
+                if model_name == 'UNet':
+                    model_name = unet.get_model_name(
+                        stego_method=L1WS_TRAIN_METHOD,
+                    )
+                res_i = ws.estimate.run(
+                    input_dir=DATA_PATH,
+                    stego_method=stego_method,
+                    alpha=alpha,
+                    channels=[3],
+                    #
+                    model_path=model_path,
+                    model_name=model_name,
+                    weighted=0,
+                    correct_bias=False,
+                    #
+                    progress_on=True,
+                )
+                res.append(res_i)
 
     # B0
-    model_path = pathlib.Path('../models/b0') / B0_TRAIN_METHOD
+    model_dir = pathlib.Path('../models/b0') / B0_TRAIN_METHOD
     for stego_method in STEGO_METHODS:
         for alpha in ALPHAS if stego_method else [.0]:
             for no_stem_stride, lsbr_reference in [
                 [False, False],
-                [True, False],
+                # [True, False],
                 [True, True]
             ]:
                 print(stego_method, alpha, 'B0', B0_TRAIN_METHOD, B0_TRAIN_ALPHA, no_stem_stride, lsbr_reference)
+                print(B0_TRAIN_METHOD, B0_TRAIN_ALPHA, no_stem_stride, lsbr_reference)
                 model_name = detector.get_model_name(
                     stego_method=B0_TRAIN_METHOD,
                     alpha=B0_TRAIN_ALPHA,
@@ -414,7 +417,7 @@ if __name__ == '__main__':
                     stego_method=stego_method,
                     alpha=alpha,
                     #
-                    model_path=model_path,
+                    model_dir=model_dir,
                     model_name=model_name,
                     no_stem_stride=no_stem_stride,
                     lsbr_reference=lsbr_reference,
@@ -428,11 +431,6 @@ if __name__ == '__main__':
     res['stego_method'] = res['stego_method'].fillna('Cover')
     res['alpha'] = res['alpha'].fillna(0.)
     print(res)
-
-
-
-
-
 
     # df_ws.to_csv(f'../text/img/df_ws_{band}.csv', index=False)
 
@@ -450,7 +448,9 @@ if __name__ == '__main__':
     ax.set_xlabel('False Positive Rate (FPR)')
     ax.set_ylabel('True Positive Rate (TPR)')
     ax.legend(loc='lower right')
-    fig.savefig(f'../results/detection/roc_{alpha}.png', bbox_inches='tight', dpi=600)
+    outfile = f'../results/detection/roc_{alpha}.png'
+    fig.savefig(outfile, bbox_inches='tight', dpi=600)
+    logging.info(f'output saved to {outfile}')
 
     # export AUC
     df_auc = df_roc[['stego_method', 'model_name', 'auc', 'p_e', 'tau0', 'fpr_tau0', 'tpr_tau0', 'fpr_50', 'tpr_50']].drop_duplicates()
@@ -461,7 +461,6 @@ if __name__ == '__main__':
         index=['tau'],
         columns=['stego_method', 'model_name'],
         values=['tpr', 'fpr'],
-    )#.sort_values('tau')
-    # print(df.to_string())
+    )
     df.columns = ['_'.join(col).strip() for col in df.columns.values]
     df.to_csv(f'../results/detection/roc_{alpha}.csv', index=False)
