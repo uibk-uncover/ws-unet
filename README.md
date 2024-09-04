@@ -1,4 +1,9 @@
 
+
+```bash
+pip install -r requirements.txt
+```
+
 Run the following commands from the `src/` subdirectory.
 
 ```bash
