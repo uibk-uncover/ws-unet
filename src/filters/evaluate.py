@@ -6,6 +6,7 @@ Affiliation: University of Innsbruck
 
 import conseal as cl
 import glob
+import logging
 import numpy as np
 import pandas as pd
 import pathlib
@@ -185,6 +186,7 @@ if __name__ == '__main__':
     OUTPUT_PATH = pathlib.Path('../results/prediction')
     filter_names = ['AVG', 'KB']
     channels = [[3], [3]]
+    logging.basicConfig(level=logging.INFO)
 
     # run pixel prediction
     res = run(
@@ -199,4 +201,6 @@ if __name__ == '__main__':
     )
 
     # save result
-    res.to_csv(OUTPUT_PATH / 'filters.csv', index=False)
+    outfile = OUTPUT_PATH / 'filters.csv'
+    res.to_csv(outfile, index=False)
+    logging.info(f'output saved to {outfile}')

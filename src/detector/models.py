@@ -67,13 +67,13 @@ def get_b0(
 
 
 def load_b0(
-    model_path: pathlib.Path,
+    model_dir: pathlib.Path,
     model_name: str,
     device: torch.nn.Module = torch.device('cpu'),
     **kw
 ) -> torch.nn.Module:
     model = get_b0(**kw).to(device)
-    resume_model_file = model_path / model_name / 'model' / 'best_model.pt.tar'
+    resume_model_file = model_dir / model_name / 'model' / 'best_model.pt.tar'
     checkpoint = torch.load(resume_model_file, map_location=device)
     model.load_state_dict(checkpoint['state_dict'])
     logging.info(f'model {model_name} loaded')

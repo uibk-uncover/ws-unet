@@ -190,8 +190,6 @@ def stego_spatial(**kw_deco):
             else:
                 df = df[df['demosaic'].isin(demosaic)]
             if stego_method is not None:
-                # print(stego_method)
-                # print(df)
                 df = df[df['stego_method'] == stego_method]
             if alpha is not None:
                 df = df[df['alpha'] == alpha]

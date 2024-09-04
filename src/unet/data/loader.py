@@ -1,28 +1,28 @@
 
-import jpeglib
-import json
-import logging
-import numpy as np
-import pandas as pd
-import pathlib
-from PIL import Image
+# import jpeglib
+# import json
+# import logging
+# import numpy as np
+# import pandas as pd
+# import pathlib
+# from PIL import Image
 import sys
-import timm
-import torch
-from torch.utils.data import Dataset, ChainDataset
+# import timm
+# import torch
+# from torch.utils.data import Dataset, ChainDataset
 import torchvision.transforms as transforms
-import torchvision.transforms.functional as F
-import typing
+# import torchvision.transforms.functional as F
+# import typing
 
 sys.path.append('..')
 import _defs
 
-try:
-    from .stego_dataset import StegoDataset
-    from .cover_dataset import CoverDataset
-except ImportError:
-    from stego_dataset import StegoDataset
-    from cover_dataset import CoverDataset
+# try:
+#     from .stego_dataset import StegoDataset
+#     from .cover_dataset import CoverDataset
+# except ImportError:
+#     from stego_dataset import StegoDataset
+#     from cover_dataset import CoverDataset
 
 
 # from _defs import RandomRotation90, ColorChannel, Grayscale, DemosaicOracle
@@ -126,89 +126,89 @@ def get_timm_transform(
 #         return 2 * len(self.index)
 
 
-def get_data_loader(
-    config_path: pathlib.Path,
-    args: typing.Dict[str, typing.Any],
-    augment: bool = False,
-    debug: bool = False,
-):
-    """"""
-    # Normalization
-    mean = list(timm.data.constants.IMAGENET_DEFAULT_MEAN)
-    std = list(timm.data.constants.IMAGENET_DEFAULT_STD)
-    # mean, std = [0, 0, 0], [1, 1, 1]
-    mean, std = None, None
-    # if args['grayscale']:  # take green
-    #     mean = mean[1:2]
-    #     std = std[1:2]
+# def get_data_loader(
+#     config_path: pathlib.Path,
+#     args: typing.Dict[str, typing.Any],
+#     augment: bool = False,
+#     debug: bool = False,
+# ):
+#     """"""
+#     # Normalization
+#     mean = list(timm.data.constants.IMAGENET_DEFAULT_MEAN)
+#     std = list(timm.data.constants.IMAGENET_DEFAULT_STD)
+#     # mean, std = [0, 0, 0], [1, 1, 1]
+#     mean, std = None, None
+#     # if args['grayscale']:  # take green
+#     #     mean = mean[1:2]
+#     #     std = std[1:2]
 
-    # Reader
-    imread = _defs.imread4_u8
-    # imread = _defs.imread_u8
-    # if args['quality'] is None:
-    #     imread = imread_pillow
-    # elif not args['grayscale']:
-    #     imread = imread_jpeglib_YCbCr
-    # else:
-    #     imread = imread_jpeglib
+#     # Reader
+#     imread = _defs.imread4_u8
+#     # imread = _defs.imread_u8
+#     # if args['quality'] is None:
+#     #     imread = imread_pillow
+#     # elif not args['grayscale']:
+#     #     imread = imread_jpeglib_YCbCr
+#     # else:
+#     #     imread = imread_jpeglib
 
-    # Dataset transform
-    transform = get_timm_transform(
-        mean=mean,
-        std=std,
-        grayscale=args.get('grayscale', False),
-        demosaic_oracle=args.get('demosaic_oracle', False),
-        parity_oracle=args.get('parity_oracle', False),
-        post_flip=args.get('post_flip', False),
-        post_rotate=args.get('post_rotate', False),
-    )
-    target_transform = transforms.Compose([
-        transforms.ToTensor(),  # to torch tensor
-        transforms.CenterCrop(512),  # reduce large images to 512x512
-        _defs.ColorChannel(args['channel']),
-        # transforms.Normalize(mean, std),
-    ])
-    print('Data transform')
-    print(transform)
-    print(target_transform)
+#     # Dataset transform
+#     transform = get_timm_transform(
+#         mean=mean,
+#         std=std,
+#         grayscale=args.get('grayscale', False),
+#         demosaic_oracle=args.get('demosaic_oracle', False),
+#         parity_oracle=args.get('parity_oracle', False),
+#         post_flip=args.get('post_flip', False),
+#         post_rotate=args.get('post_rotate', False),
+#     )
+#     target_transform = transforms.Compose([
+#         transforms.ToTensor(),  # to torch tensor
+#         transforms.CenterCrop(512),  # reduce large images to 512x512
+#         _defs.ColorChannel(args['channel']),
+#         # transforms.Normalize(mean, std),
+#     ])
+#     # print('Data transform')
+#     # print(transform)
+#     # print(target_transform)
 
-    # Dataset
-    if args.get('covers_only', False):
-        Dataset = CoverDataset
-    else:
-        Dataset = StegoDataset
+#     # Dataset
+#     if args.get('covers_only', False):
+#         Dataset = CoverDataset
+#     else:
+#         Dataset = StegoDataset
 
-    dataset = Dataset(
-        # dataset
-        args['dataset'],
-        config_path,
-        imread=imread,
-        # training parameters
-        filters_cover=args['filters_cover'],
-        filters_cover_oneof=args['filters_cover_oneof'],
-        filters_stego=args['filters_stego'],
-        filters_stego_oneof=args['filters_stego_oneof'],
-        rotation=None if args['pre_rotate'] else 0,  #
-        # pair constraint
-        pair_constraint=args['pair_constraint'],
-        seed=args['seed'],  # for reshuffling
-        # other
-        transform=transform,
-        target_transform=target_transform,
-        debug=debug,
-    )
+#     dataset = Dataset(
+#         # dataset
+#         args['dataset'],
+#         config_path,
+#         imread=imread,
+#         # training parameters
+#         filters_cover=args['filters_cover'],
+#         filters_cover_oneof=args['filters_cover_oneof'],
+#         filters_stego=args['filters_stego'],
+#         filters_stego_oneof=args['filters_stego_oneof'],
+#         rotation=None if args['pre_rotate'] else 0,  #
+#         # pair constraint
+#         pair_constraint=args['pair_constraint'],
+#         seed=args['seed'],  # for reshuffling
+#         # other
+#         transform=transform,
+#         target_transform=target_transform,
+#         debug=debug,
+#     )
 
-    # Data loader
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=args["batch_size"],
-        shuffle=False,
-        num_workers=args["num_workers"],
-        pin_memory=True,
-    )
+#     # Data loader
+#     loader = torch.utils.data.DataLoader(
+#         dataset,
+#         batch_size=args["batch_size"],
+#         shuffle=False,
+#         num_workers=args["num_workers"],
+#         pin_memory=True,
+#     )
 
-    #
-    return loader, dataset
+#     #
+#     return loader, dataset
 
 
 # for split in ['tr', 'va', 'te']:

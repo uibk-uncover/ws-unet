@@ -4,83 +4,28 @@ Author: Martin Benes
 Affiliation: University of Innsbruck
 """
 
-import argparse
-import collections
 import glob
 import json
 import logging
 import numpy as np
 import pandas as pd
 import pathlib
+from pathlib import Path
 import sys
 import torch
-from torch.utils.tensorboard import SummaryWriter
-from torchinfo import summary
-import torchvision.transforms as transforms
 import typing
 
 sys.path.append('.')
 import _defs
 sys.path.append('unet')
-from data import get_data_loader, get_timm_transform
+# from data import get_data_loader, get_timm_transform
+from data import get_timm_transform
 from model import get_model
-# sys.path.append('..')
-# from _defs import seed_everything, setup_custom_logger
-# from _defs import metrics, losses
+import fabrika
 
 #
 DEVICE = torch.device('cpu')
 log = _defs.setup_custom_logger(pathlib.Path(__file__).name)
-
-
-def evaluate_model(
-    loader: torch.utils.data.DataLoader,
-    model: torch.nn.Module,
-    criterion, device,
-    loss_meter,
-    mask_meters,
-    target_meters,
-) -> float:
-
-    # switch to evaluate mode
-    model.eval()
-
-    with torch.no_grad():
-        for i, (images, targets) in enumerate(loader):
-            batch_size = images.size(0)
-
-            images = images.to(device, non_blocking=True)
-            targets[0] = targets[0].to(device, non_blocking=True)
-            alphas = targets[1].numpy()
-            targets[1] = targets[1].to(device, non_blocking=True)
-            covers = targets[0]
-
-            # Forward-propagate
-            outputs = model(images)
-
-            # Collect input dropout mask
-            dropout_mask = None
-
-            # Compute loss
-            loss = criterion(outputs, targets, images)
-
-            # Record performance
-            images = images.cpu().numpy()
-            covers = covers.cpu().numpy()
-            outputs = outputs.detach().cpu().numpy()
-            loss_meter.update(loss.item(), batch_size)
-            for meter in mask_meters:
-                meter.update(
-                    covers,
-                    outputs,
-                    dropout_mask,
-                )
-            for meter in target_meters:
-                meter.update(
-                    images,
-                    outputs,
-                    alphas,
-                )
 
 
 def infere_single(
@@ -107,136 +52,6 @@ def infere_single(
     return y[..., None]
 
 
-def evaluate_for_dataset(loader, model, criterion, device, suffix):
-
-    # Create meters
-    loss_meter = _defs.metrics.AverageMeter('Loss', ':.4e')
-    mask_meters = [
-        _defs.metrics.MAEMeter('MAE', ':.4e')
-    ]
-    target_meters = [
-        _defs.metrics.WSMeter('WS', ':.4e'),
-    ]
-
-    # Evaluate model
-    evaluate_model(
-        loader=loader,
-        model=model,
-        criterion=criterion,
-        device=device,
-        loss_meter=loss_meter,
-        mask_meters=mask_meters,
-        target_meters=target_meters,
-    )
-
-    # Write predictions
-    return {
-        'loss': loss_meter.avg,
-        **({
-            v.name: v.avg
-            for v in (mask_meters + target_meters)
-        }),
-    }
-
-
-def evaluate(
-    model_name: str,
-    split: str,
-    config: typing.Dict[str, typing.Any],
-):
-    # Set up directory name for output directory
-    output_path = config['output_dir'] / pathlib.Path(model_name)
-    output_path.mkdir(exist_ok=True)
-    model_path = config['model_path']
-    result_file = output_path / 'results.csv'
-
-    # Get model and log directories
-    # Concatenate path to one subdirectory for logging
-    log_dir = output_path / 'log'
-    model_file = model_path / 'model' / 'best_model.pt.tar'
-
-    # Decide whether to run on GPU or CPU
-    if torch.cuda.is_available():
-        log.info('Using GPU')
-        device = torch.device('cuda')
-    else:
-        log.info('Using CPU, this will be slow')
-        device = torch.device('cpu')
-
-    # Seed if requested
-    if config['seed']:
-        log.warn('You have chosen to seed training. This will turn on the CUDNN deterministic setting, which can slow down your training considerably! You may see unexpected behavior when restarting from checkpoints.')
-        _defs.seed_everything(config['seed'])
-
-    # Data loaders
-    config['pre_rotate'] = config['post_rotate'] = config['post_flip'] = config['pre_flip'] = False
-    te_loader, te_dataset = get_data_loader(split, config)
-    print(f'Evaluating on {len(te_loader)} batches')
-
-    # Input channels
-    in_channels = 1 if config['grayscale'] else 3
-    in_channels += 1 if config['parity_oracle'] else 0
-    in_channels += 3 if config['demosaic_oracle'] else 0
-    out_channels = 1
-
-    # Set up model
-    model = get_model(
-        config['network'],
-        in_channels=in_channels,
-        out_channels=out_channels,
-        channel=config['channel'],
-        drop_rate=0.0,
-    ).to(device)
-    summary(
-        model,
-        input_size=(config['batch_size'], in_channels, *config['shape'])
-    )
-
-    # Set up loss and optimizer
-    if config['loss'] == 'l1':
-        criterion = _defs.losses.L1Loss().to(device)
-    elif config['loss'] == 'l1ws':
-        criterion = _defs.losses.L1WSLoss().to(device)
-    else:
-        raise NotImplementedError(f'loss {config["loss"]} not implemented')
-
-    # Get device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    # Load best checkpoint
-    checkpoint = torch.load(model_file, map_location=device)
-    log.info(f'=> loaded trained model {model_file} ({checkpoint["epoch"]} epochs)')
-
-    # Evaluation
-    scores = evaluate_for_dataset(
-        loader=te_loader,
-        model=model,
-        criterion=criterion,
-        device=device,
-        suffix='',
-    )
-
-    # write columns (on first write)
-    config_cols = ['stego_method', 'dataset', 'split']
-    score_cols = ['loss', 'mae', 'ws']
-    if not pathlib.Path(result_file).exists():
-        with open(result_file, 'a') as f:
-            f.write(
-                ','.join(config_cols + score_cols) + '\n'
-            )
-    # write results
-    print(scores)
-    with open(result_file, 'a') as f:
-        s = [
-            str(config[c])
-            for c in config_cols
-        ] + [
-            str(scores[c])
-            for c in score_cols
-        ]
-        f.write(','.join(s) + '\n')
-
-
 def get_model_name(
     stego_method: str = 'LSBR',
     model_dir: pathlib.Path = pathlib.Path('../models/unet'),
@@ -257,7 +72,7 @@ def get_model_name(
         # load model
         try:
             model_file = model.parent / 'model' / 'best_model.pt.tar'
-            checkpoint = torch.load(model_file, map_location=device)
+            checkpoint = torch.load(model_file, map_location=device, weights_only=True)
         except FileNotFoundError:
             logging.warning(f'no model found for {model_name}, skipped')
             continue
@@ -290,6 +105,49 @@ def get_model_name(
     return df['model_name'].iloc[0]
 
 
+
+def predict_unet(
+    fname: str,
+    model: torch.nn.Module,
+    *,
+    device: torch.nn.Module = torch.device('cpu'),
+    imread: typing.Callable = _defs.imread4_f32,
+    **kw,
+):
+    # load image
+    x = imread(fname)
+    x = x[..., 3:]
+
+    # infere single image
+    x_hat = infere_single(x, model=model, device=device)
+
+    # difference image
+    x = x[1:-1, 1:-1]
+
+    # WS estimate
+    x_bar = (x.astype('uint8') ^ 1).astype('float32')
+    beta_hat = np.mean((x - x_bar) * (x - x_hat))
+
+    # MAE estimate
+    l1_hat = np.mean(np.abs(x - x_hat))
+
+    #
+    return {
+        **kw,
+        'beta_hat': beta_hat,
+        'l1': l1_hat
+    }
+
+
+@fabrika.precovers(iterator='python', convert_to='pandas', ignore_missing=False, n_jobs=-1)  # n_jobs=os.cpu_count())
+def predict_unet_cover(*args, **kw):
+    return predict_unet(*args, **kw)
+
+
+@fabrika.stego_spatial(iterator='python', convert_to='pandas', ignore_missing=False, n_jobs=-1)  # n_jobs=os.cpu_count())
+def predict_unet_stego(*args, **kw):
+    return predict_unet(*args, **kw)
+
 def get_model_config(
     model_dir: pathlib.Path,
     stego_method: str,
@@ -301,33 +159,72 @@ def get_model_config(
     return config
 
 
+def get_pretrained(
+    model_path,
+    channels,
+    *,
+    model_name: str = None,
+    # network: str = None,
+    device: torch.nn.Module = torch.device('cpu')
+):
+    # config
+    model_path = Path(model_path)
+    with open(model_path / model_name / 'config.json') as f:
+        config = json.load(f)
+    # model
+    model = get_model(
+        config['network'],
+        in_channels=1,
+        out_channels=1,
+        channel=[0],
+        drop_rate=0.,
+    ).to(device)
+
+    # load
+    resume_model_file = model_path / model_name / 'model' / 'best_model.pt.tar'
+    checkpoint = torch.load(resume_model_file, map_location=device, weights_only=True)
+    model.load_state_dict(checkpoint['state_dict'])
+    logging.info(f'model {model_name} loaded')
+    return model
+
 if __name__ == '__main__':
+
     #
+    data_path = Path('../data')
     model_dir = pathlib.Path('../models/unet')
-    stego_method = 'dropout'  # dropout LSBR HILLR
+    stego_method = 'HILLR'  # dropout LSBR HILLR
+    logging.basicConfig(level=logging.INFO)
     model_name = get_model_name(
         model_dir=model_dir,
         stego_method=stego_method,
         device=DEVICE,
     )
-
-    #
-    config = get_model_config(
-        model_dir=model_dir,
+    
+    model_name = get_model_name(
         stego_method=stego_method,
+    )
+    model = get_pretrained(
+        model_path=model_dir / stego_method,
+        channels=(3,),
+        device=DEVICE,
         model_name=model_name,
     )
-    config['model_path'] = model_dir / stego_method / model_name
-    config['output_dir'] = pathlib.Path('../results/prediction/')
-    config['dataset'] = pathlib.Path('../data/')
-    config['batch_size'] = 1
-    config['print_freq'] = 1
 
-    #
-    for split in ['split_tr.csv', 'split_va.csv', 'split_te.csv']:
-        config['split'] = split
-        evaluate(
-            model_name=model_name,
-            split=split,
-            config=config,
-        )
+    df = predict_unet_cover(
+        data_path,
+        model=model,
+        progress_on=True,
+    )
+    for sm in ['LSBR', 'HILLR']:
+        df_stego = predict_unet_stego(
+            data_path,
+            model=model,
+            stego_method=sm,
+            progress_on=True,
+        )        
+        df = pd.concat([df, df_stego])
+
+    outfile = f'../results/estimation/ws_{stego_method}.csv'
+    df.to_csv(outfile, index=False)
+    logging.info(f'output saved to {outfile}')
+        

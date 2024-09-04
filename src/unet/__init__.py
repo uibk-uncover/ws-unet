@@ -8,37 +8,37 @@ import torch
 
 from . import data
 from .model import load_model, get_model
-from .evaluate import infere_single, get_model_name, get_model_config
+from .evaluate import infere_single, get_model_name, get_model_config, get_pretrained
 
 
-def get_pretrained(
-    model_path,
-    channels,
-    *,
-    model_name: str = None,
-    # network: str = None,
-    device: torch.nn.Module = torch.device('cpu')
-):
-    # config
-    model_path = Path(model_path)
-    with open(model_path / model_name / 'config.json') as f:
-        config = json.load(f)
-    # model
-    model = get_model(
-        config['network'],
-        in_channels=1,
-        out_channels=1,
-        channel=[0],
-        drop_rate=0.,
-    ).to(device)
+# def get_pretrained(
+#     model_path,
+#     channels,
+#     *,
+#     model_name: str = None,
+#     # network: str = None,
+#     device: torch.nn.Module = torch.device('cpu')
+# ):
+#     # config
+#     model_path = Path(model_path)
+#     with open(model_path / model_name / 'config.json') as f:
+#         config = json.load(f)
+#     # model
+#     model = get_model(
+#         config['network'],
+#         in_channels=1,
+#         out_channels=1,
+#         channel=[0],
+#         drop_rate=0.,
+#     ).to(device)
 
-    # load
-    resume_model_file = model_path / model_name / 'model' / 'best_model.pt.tar'
-    checkpoint = torch.load(resume_model_file, map_location=device)
-    model.load_state_dict(checkpoint['state_dict'])
-    logging.info(f'model {model_name} loaded')
-    print(f'model {model_name} loaded')
-    return model
+#     # load
+#     resume_model_file = model_path / model_name / 'model' / 'best_model.pt.tar'
+#     checkpoint = torch.load(resume_model_file, map_location=device)
+#     model.load_state_dict(checkpoint['state_dict'])
+#     logging.info(f'model {model_name} loaded')
+#     print(f'model {model_name} loaded')
+#     return model
 
 
 # def get_model_name(

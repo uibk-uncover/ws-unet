@@ -1,4 +1,5 @@
-timm
+numpy
+tensorflow
 matplotlib
 pandas
 scikit-learn
@@ -6,3 +7,6 @@ seaborn
 conseal
 opencv-python
 jpeglib
+tensorboard
+torchinfo
+timm
